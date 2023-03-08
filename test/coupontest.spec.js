@@ -1,6 +1,6 @@
 import { WebDriver, Builder, By, Key, until } from 'selenium-webdriver'; //WebDriver is imported explicitly for type hinting
 import chai from 'chai'
-const expect = chai.expect; //Chose expect style to mirror playwright
+const expect = chai.expect; //Choose expect style to mirror playwright testrunner
 describe('A Suite', async function () {
     this.timeout(0) //Mocha normally times out tests after 2s - this disables timeouts (wont work with arrow syntax)
     /**@type {WebDriver} */
@@ -18,6 +18,7 @@ describe('A Suite', async function () {
         await driver.sleep(3000) //3 second dumb wait before close
         await driver.quit()
     });
+    //Orders 2 caps, uses drop down to navigate to cart,  applies edgewords coupon, asserts on coupon discount amount
     it('Coupon test', async function () {
         /*
         * Arrange

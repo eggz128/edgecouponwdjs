@@ -1,20 +1,28 @@
-import { Builder, By, Key, until } from 'selenium-webdriver';
+import { WebDriver, Builder, By, Key, until } from 'selenium-webdriver'; //WebDriver is imported explicitly for type hinting
 import chai from 'chai'
-const expect = chai.expect;
+const expect = chai.expect; //Chose expect style to mirror playwright
 describe('A Suite', async function () {
-    this.timeout(0)
-    let driver;
+    this.timeout(0) //Mocha normally times out tests after 2s - this disables timeouts (wont work with arrow syntax)
+    /**@type {WebDriver} */
+    let driver; //Type annotation above hints to VSCode the type for better intellisense
     beforeEach(async function () {
-        driver = new Builder().forBrowser('MicrosoftEdge').build()
+        console.log(`Running ${this.currentTest.title}`)
+        driver = new Builder().forBrowser('chrome').build()
+        //await driver.manage().window().maximize()
+        await driver.manage().window().setRect({width:1024,height:768})
         await driver.get('https://www.edgewordstraining.co.uk/demo-site')
         await driver.findElement(By.linkText('Dismiss')).click()
+        
     });
     afterEach(async function () {
-        await driver.sleep(3000)
+        await driver.sleep(3000) //3 second dumb wait before close
         await driver.quit()
     });
     it('Coupon test', async function () {
-        {   //Real keyboard events unlike Cypres and Playwright?
+        /*
+        * Arrange
+        */
+        {   //Real keyboard events unlike Cypress and Playwright?
             //wait driver.findElement(By.css('input[placeholder="Search products…"]')).click()
             //await driver.actions().keyDown(Key.SHIFT).sendKeys('cap').keyUp(Key.SHIFT).pause(3000).perform()
         }
@@ -23,24 +31,39 @@ describe('A Suite', async function () {
         await driver.findElement(By.css('button[name=add-to-cart]')).click()
         { //Do mouse hover to show drop down
             const dropDownCartMenu = await driver.findElement(By.id('site-header-cart'))
-            await driver.actions().move({ origin: dropDownCartMenu }).pause(1000).perform()
+            await driver.actions().move({ origin: dropDownCartMenu }).pause(500).perform()
         }
-        // await driver.findElement(By.className('widget_shopping_cart_content')) //chained to ensure link is from drop down
+        // Click link in drop down
+        // await driver.findElement(By.className('widget_shopping_cart_content')) 
         //     .findElement(By.partialLinkText('View cart')).click();
-        const cartLink = await driver.wait(async function (driver) {
-            return await driver.findElement(By.className('widget_shopping_cart_content')).findElement(By.partialLinkText('View cart'));
+
+        // Might be best to wait - here in two steps
+        // const cartLink = await driver.wait(async function (driver) {
+        //     return await driver.findElement(By.className('widget_shopping_cart_content')).findElement(By.partialLinkText('View cart')); //chained to ensure link is from drop down
+        // }, 5000)
+        // await cartLink.click()
+
+        //wait using just one 'step', and arrow function syntax
+        await driver.wait(async (driver) => { //using own function. Will retry until not falsy / timeout
+            return await driver.findElement(By.className('widget_shopping_cart_content')).findElement(By.partialLinkText('View cart')) //chained to ensure link is from drop down
         }, 5000)
-        await cartLink.click()
+            .then(link => link.click()); //as wait returns promise of elm, can then() it. This is a JS standard then - not a Cypress (Bluebird) then()
+
+
+        /*
+        *Act
+        */
         await driver.findElement(By.css('input[id^="quantity"]')).clear()
         await driver.findElement(By.css('input[id^="quantity"]')).sendKeys('2')
         await driver.findElement(By.css('button[value="Update cart"]')).click()
-        //Page autoscrolls - need to manually wait or coupon may not be entered/apply button goes stale
         await driver.sleep(3000)
         await driver.findElement(By.css('label[for^=coupon] + input')).sendKeys('edgewords')
+        await driver.actions().scr
         await driver.findElement(By.css('button[value="Apply coupon"]')).click()
+        //Wait for JS to update page or risk stale/detached elements
+        await driver.wait(until.elementLocated(By.css('[data-title^="Coupon"] > .amount')), 5000)
 
         const cartTotals = await driver.findElement(By.css('.cart_totals table'))
-
         let subTotal = await cartTotals.findElement(By.css('[data-title="Subtotal"')).getText()
         let couponDiscount = await cartTotals.findElement(By.css('[data-title^="Coupon"] > .amount')).getText() //May also need to wait for coupon to apply earlier
         let shipping = await cartTotals.findElement(By.css('label[for^=shipping] > .amount')).getText()
@@ -65,6 +88,6 @@ describe('A Suite', async function () {
         ${[subTotalPennies, calculatedDiscount, shippingPennies, totalPennies]} : ${subTotalPennies - calculatedDiscount + shippingPennies == totalPennies}
         `)
 
-        expect(couponDiscount).to.equal(calculatedDiscount)
+        expect(couponDiscountPennies).to.equal(calculatedDiscount)
     });
 });

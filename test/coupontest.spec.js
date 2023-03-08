@@ -73,7 +73,7 @@ describe('A Suite', async function () {
         /*
         * Assert
         */
-        //Strip £, convert to whole pennies for calc purposes. There are better suitad external libraries for monetary/currency calculations, but this avoids extra dependencies
+        //Strip £, convert to whole pennies for calc purposes. There are better suited external libraries for monetary/currency calculations, but this avoids extra dependencies
         let textTotals = [subTotal, couponDiscount, shipping, total].map(function (x) { return x.replace('£', '') })
         let [subTotalPennies, couponDiscountPennies, shippingPennies, totalPennies] = textTotals.map(text => parseFloat(text) * 100)
 
@@ -88,7 +88,7 @@ describe('A Suite', async function () {
         CapturedPennies,CalculatedDiscountPennies,CapturedShippingPennies,CapturedTotalPennies : Sub-Discount+Shipping=Total
         ${[subTotalPennies, calculatedDiscount, shippingPennies, totalPennies]} : ${subTotalPennies - calculatedDiscount + shippingPennies == totalPennies}
         `)
-
+        //Chai expect style assert. Similar to Playwright bundled Jest expect.
         expect(couponDiscountPennies).to.equal(calculatedDiscount)
     });
 });

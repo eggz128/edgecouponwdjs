@@ -1,5 +1,6 @@
 import { WebDriver, Builder, By, Key, until } from 'selenium-webdriver'; //WebDriver is imported explicitly for type hinting
 import chai from 'chai'
+
 const expect = chai.expect; //Choose expect style to mirror playwright testrunner
 describe('A Suite', async function () {
     this.timeout(0) //Mocha normally times out tests after 2s - this disables timeouts (wont work with arrow syntax)
@@ -9,26 +10,29 @@ describe('A Suite', async function () {
         console.log(`Running ${this.currentTest.title}`)
         driver = new Builder().forBrowser('chrome').build()
         //await driver.manage().window().maximize()
-        await driver.manage().window().setRect({width:1024,height:768})
+        await driver.manage().window().setRect({ width: 1024, height: 768 })
         await driver.get('https://www.edgewordstraining.co.uk/demo-site')
         await driver.findElement(By.linkText('Dismiss')).click()
     });
     afterEach(async function () {
+        await driver.sleep(2000)
         await driver.findElement(By.css('[aria-label="Remove this item"]')).click()
         //Short animation as item removed - need to wait for "Return To Shop" link before clicking
-        await driver.wait(until.elementLocated(By.linkText('Return to shop')),3000).then(returnLink => returnLink.click())
+        await driver.wait(until.elementLocated(By.linkText('Return to shop')), 3000)
+            .then(returnLink => returnLink.click())
         await driver.sleep(3000) //3 second dumb wait before close
         await driver.quit()
     });
     //Orders 2 caps, uses drop down to navigate to cart,  applies edgewords coupon, asserts on coupon discount amount
     it('Coupon test', async function () {
-        /*
-        * Arrange
-        */
+
         {   //Real keyboard events unlike Cypress and Playwright?
             //wait driver.findElement(By.css('input[placeholder="Search products…"]')).click()
             //await driver.actions().keyDown(Key.SHIFT).sendKeys('cap').keyUp(Key.SHIFT).pause(3000).perform()
         }
+        /*
+        * Arrange
+        */
         await driver.findElement(By.css('input[placeholder="Search products…"]')).sendKeys('Cap' + Key.ENTER)
 
         await driver.findElement(By.css('button[name=add-to-cart]')).click()
@@ -59,9 +63,18 @@ describe('A Suite', async function () {
         await driver.findElement(By.css('input[id^="quantity"]')).clear()
         await driver.findElement(By.css('input[id^="quantity"]')).sendKeys('2')
         await driver.findElement(By.css('button[value="Update cart"]')).click()
-        await driver.sleep(3000)
+        //Wait for cart to be updated or coupon may not apply properly
+        await driver.wait(async (driver) => {
+            console.log('Waiting')
+            let expectedAlertMessage
+            try {
+                expectedAlertMessage = await driver.findElement(By.css('[role=alert]')).getText()
+            } catch (e) {
+                return false
+            }
+            return (expectedAlertMessage.includes('Cart updated.'))
+        }, 3000)
         await driver.findElement(By.css('label[for^=coupon] + input')).sendKeys('edgewords')
-        await driver.actions().scr
         await driver.findElement(By.css('button[value="Apply coupon"]')).click()
         //Wait for JS to update page or risk stale/detached elements
         await driver.wait(until.elementLocated(By.css('[data-title^="Coupon"] > .amount')), 5000)

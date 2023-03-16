@@ -12,9 +12,11 @@ describe('A Suite', async function () {
         await driver.manage().window().setRect({width:1024,height:768})
         await driver.get('https://www.edgewordstraining.co.uk/demo-site')
         await driver.findElement(By.linkText('Dismiss')).click()
-        
     });
     afterEach(async function () {
+        await driver.findElement(By.css('[aria-label="Remove this item"]')).click()
+        //Short animation as item removed - need to wait for "Return To Shop" link before clicking
+        await driver.wait(until.elementLocated(By.linkText('Return to shop')),3000).then(returnLink => returnLink.click())
         await driver.sleep(3000) //3 second dumb wait before close
         await driver.quit()
     });

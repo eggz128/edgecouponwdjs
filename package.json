@@ -13,5 +13,8 @@
     "chai": "^4.3.7",
     "mocha": "^10.2.0",
     "selenium-webdriver": "^4.8.1"
+  },
+  "devDependencies": {
+    "mochawesome": "^7.1.3"
   }
 }

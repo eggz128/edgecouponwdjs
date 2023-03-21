@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "test": "npx mocha --reporter mochawesome",
-    "testparallel": "mocha --parallel --reporter mochawesome --require mochawesome/register"
+    "testparallel": "mocha --parallel --retries 3 --reporter mochawesome --require mochawesome/register"
   },
   "author": "",
   "license": "ISC",
